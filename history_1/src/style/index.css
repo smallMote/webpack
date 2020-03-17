@@ -1,0 +1,6 @@
+@import './common.css';
+h1 {
+  text-align: center;
+  color: seagreen;
+  transform: rotate(15deg);
+}

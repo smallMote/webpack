@@ -160,4 +160,110 @@ module.export = {
 ```
 ### 区分环境
 1. 在模块中区分环境可以使用node的```process.env.NODE_ENV```对象，它将读取webpack中mode配置的值。
-2. 使用webpack的smart对象耦合配置文件
+2. 使用webpack-merge插件中的smart对象耦合配置文件,smart会重组函数、合并数组与对象再运行配置文件。
+
+```
+yarn add webpack-merge -D
+// 使用指定配置文件打包(调试)
+npx webpack --config webpack.dev.js
+npx webpack --config webpack.prod.js
+npx webpack-dev-serve --config webpack.dev.js
+```
+webpack.config.base.js  
+用来存放公共配置，也就是生产环境和开发环境都会用到的配置。
+```
+const path = (p) => require('path').resolve(__dirname, p)
+module.exports = {
+  entry: {
+    home: './src/home.js',
+    about: './src/about.js'
+  },
+  output: {
+    path: path('build'),
+    filename: 'script/[name].[hash:6].js' // [name]于entry的键对应
+  },
+  ...
+}
+```
+webpack.dev.js  
+用来存放开发环境用到的配置
+```
+const { smart } = require('webpack-merge')
+const baseWebpack = require('./webpack.config.base')
+module.exports = smart(baseWebpack, {
+  mode: 'development',
+  devServer: {
+    port: 3000,
+    progress: true,
+  },
+  ...
+}
+```
+webpack.prod.js  
+用来存放开发环境用到的配置
+```
+const Webpack = require('webpack')
+const { smart } = require('webpack-merge')
+const baseWebpack = require('./webpack.config.base')
+
+module.exports = smart(baseWebpack, {
+  mode: 'production',
+  plugins: [
+    new Webpack.BannerPlugin({
+      banner: '©Luckyoung',
+      include: /script/
+    })
+  ],
+  ...
+})
+```
+### webpack优化
++ noParse 不去解析这个模块，如果里面有其他依赖模块也不会去解析。
+  eg: ```noParse: /jquery/```
++ IgnorePlugin 忽略安装包中的一些文件（夹），不引用。
+  eg: 
+  ````
+  // 使用moment库作为案例
+  // webpack.config.js
+  plugins: [
+    new Webpack.IgnorePlugin(/\.\/locale/, /moment/)
+  ]
+  // main.js
+  import moment from 'moment'
+  moment.locale('zh-cn') // 忽略后不生效
+  import 'moment/locale/zh-cn' // 单独引入需要的资源
+  console.log(moment().endOf('day').fromNow())
+  ```
++ dllPlugin动态链接库 在如今SPA应用横行的年代，首屏加载一直是一个痛点，我们只有不断地减少打包的体积实现加载的速度，或者SSR。其中出色的框架有Vue、React等框架。这些框架的代码我们是不用去改变的，我们可以将其单独打包，放上依赖映射，从而减小项目体积。这里我就用React举个例子，来实现动态链接库。
+  webpack.react.js 负责打包react的动态链接库
+  ```
+  const path = require('path')
+  const Webpack = require('webpack')
+  module.exports = {
+    mode: 'development', // development || production
+    entry: {
+      react: ['react', 'react-dom']
+    },
+    output: {
+      path: path.resolve(__dirname, 'dill'),
+      filename: '_dll_[name].js',
+      library: '_dll_[name]' // 动态链接库变量的名称
+    },
+    plugins: [
+      new Webpack.DllPlugin({
+        name: '_dll_[name]', // 动态链接库文件的名称
+        path: path.resolve(__dirname, 'dill', 'manifest.json')  // 动态链接库的依赖指向列表
+      })
+    ]
+  }
+  ```
+  webpack.config.js
+  ```
+  ...
+  plugins: [
+    new Webpack.DllReferencePlugin({ // 链接动态链接库，首先查找
+      manifest: path.resolve( __dirname, 'build', 'manifest.json')
+    }),
+  ]
+  ...
+  ```

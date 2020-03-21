@@ -2,6 +2,7 @@ const path = require('path')
 const Webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const Happypack = require('happypack')
 module.exports = {
   mode: 'development', // development || production
   entry: {
@@ -29,11 +30,22 @@ module.exports = {
     rules: [
       {
         test: /\.css$/,
-        loader: ['style-loader', 'css-loader']
+        loader: 'happypack/loader?id=css'
       },
       {
         test: /\.(js|jsx)$/,
-        use: { 
+        use: 'happypack/loader?id=js', // 若不配置id 默认id从1递增
+        include: path.resolve( __dirname,'src'),
+        exclude: /node_modules/
+      },
+    ],
+  },
+  plugins: [
+    new Happypack({
+      id: 'js',
+      threads: 1, // 默认线程3
+      use: [
+        { 
           loader: 'babel-loader',// 处理高版本语法转低版本语法
           options: {
             presets: [
@@ -47,22 +59,20 @@ module.exports = {
             ]
           }
         },
-        include: path.resolve( __dirname,'src'),
-        exclude: /node_modules/
-      },
-    ],
-  },
-  plugins: [
-    new Webpack.DllReferencePlugin({
-      manifest: path.resolve( __dirname, 'build', 'manifest.json')
+      ]
+    }),
+    new Happypack({
+      id: 'css',
+      threads: 1,
+      loaders: ['style-loader', 'css-loader']
     }),
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: 'index.html',
     }),
-    // new CleanWebpackPlugin({
-    //   verbose: true
-    // }),
+    new CleanWebpackPlugin({
+      verbose: true
+    }),
     new Webpack.BannerPlugin({
       banner: '©Luckyoung',
       include: /script/,

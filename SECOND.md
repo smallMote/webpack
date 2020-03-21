@@ -267,3 +267,80 @@ module.exports = smart(baseWebpack, {
   ]
   ...
   ```
+### 多线程打包
+> 使用```happypack```插件实现，当项目小时我们可以使用线程比较少的方式打包，当项目大时使用多线程打包，因为启动线程也是需要一定时间的，灵活使用。
+```
+yarn add happypack -D
+```
+webpack.config.js
+```
+const Happypack = require('happypack')
+module.exports = {
+  ...
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        loader: 'happypack/loader?id=css'
+      },
+      {
+        test: /\.(js|jsx)$/,
+        use: 'happypack/loader?id=js', // 若不配置id 默认id从1递增
+        include: path.resolve( __dirname,'src'),
+        exclude: /node_modules/
+      },
+    ],
+  },
+  plugins: [
+    new Happypack({
+      id: 'js',
+      threads: 1, // 默认线程3
+      use: [
+        { 
+          loader: 'babel-loader',// 处理高版本语法转低版本语法
+          options: {
+            presets: [
+              '@babel/preset-env',
+              '@babel/preset-react'
+            ],
+            plugins: [
+              ["@babel/plugin-proposal-decorators", { "legacy": true }],
+              ["@babel/plugin-proposal-class-properties", { "loose" : true }],
+              "@babel/plugin-transform-runtime"
+            ]
+          }
+        },
+      ]
+    }),
+    new Happypack({
+      id: 'css',
+      threads: 1,
+      loaders: ['style-loader', 'css-loader']
+    }),
+    ...
+  ]
+}
+```
+### webpack那些自带的打包优化
++ 在生产模式下，webpack打包会把```import``语法中没用的代码删除，这种模式叫tree-shaking，eg：
+  ```
+  // calc模块
+  const sum = (a, b) => a + b
+  const minus = (a, b) => a - b
+  export default { sum, minus }
+  // 使用
+  import calc模块 from 'calc'
+  console.log(calc.sum(1, 2))
+  // 没有使用minus，打包后是没有minus函数的相关代码的
+  ```
++ 当出现可计算表达式时，webpack在生产环境打包时往往是将计算的结果返回，eg:
+  ```
+  // 打包前
+  let a = 1
+  let b = 2
+  let c = a + b
+  // 打包后
+  let a = 1
+  let b = 2
+  let c = 3
+  ```

@@ -375,3 +375,17 @@ module.exports = {
   ...
 }
 ```
+### 懒加载
+webpack提供的懒加载目前还属于提案中的语法，使用```import([module])```导入模块，返回的是一个Promise对象。
+当使用到该模块中的内容时才加载到客户端中执行。在Vue，React的路由懒加载也是该原理。
+```
+// lazy.js
+export const m = module.id
+export default module.id
+// main.js
+const loadLazyModule = () => {
+  import('./module/lazy').then(res => { // 懒加载
+    console.log(res) // Module {default: "./src/module/lazy.js", __esModule: true, Symbol(Symbol.toStringTag): "Module"}
+  })
+}
+```

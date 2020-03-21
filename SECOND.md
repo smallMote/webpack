@@ -344,3 +344,34 @@ module.exports = {
   let b = 2
   let c = 3
   ```
+### 抽离公共代码（多页面应用）
+webpack.config.js
+```
+module.exports = {
+  optimization: { // 优化项
+    splitChunks: { // 代码分割
+      cacheGroups: { // 缓存组
+        commons: {
+          name: 'myPublicCommon', // 自定义模块名称
+          chunks: 'initial', // 初始化的时候使用 （all | initial | async）
+          minSize: 0, // 文件最小大小
+          minChunks: 2 // 最少引用两次及其以上菜抽取
+        }
+      }
+    }
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/index.html',
+      filename: 'home.html',
+      chunks: ['home', 'myPublicCommon', 'vendor'] // 引入公共模块
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/index.html',
+      filename: 'about.html',
+      chunks: ['about', 'myPublicCommon', 'vendor'] 
+    })
+  ]
+  ...
+}
+```

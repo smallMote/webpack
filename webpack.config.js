@@ -1,16 +1,36 @@
-const path = require('path')
+const path = (p) => require('path').resolve(__dirname, p)
 const Webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const Happypack = require('happypack')
 module.exports = {
-  mode: 'development', // development || production
+  optimization: { // 优化项
+    splitChunks: { // 代码分割
+      cacheGroups: { // 缓存组
+        commons: {
+          name: 'myPublicCommon', // 自定义抽离出来的文件名称
+          chunks: 'initial', // 初始化的时候使用 （all | initial | async）
+          minSize: 0, // 文件最小大小
+          minChunks: 2 // 最少引用两次及其以上菜抽取
+        },
+        vendor: { // 抽离第三方模块
+          priority: 1, // 权重，让第三方模块现抽离
+          name: 'vendor', // 自定义抽离出来的文件名称
+          test: /node_modules/,
+          chunks: 'initial',
+          minSize: 0,
+          minChunks: 2
+        }
+      },
+    }
+  },
+  mode: 'development',
   entry: {
-    main: './src/main.js'
+    home: './src/home.js',
+    about: './src/about.js'
   },
   output: {
-    path: path.resolve( __dirname, 'build'),
-    filename: 'script/[name].[hash:6].js' // [name]于entry的键对应
+    path: path('build'),
+    filename: 'script/[name].[hash:6].js'
   },
   devServer: {
     port: 3000,
@@ -19,38 +39,29 @@ module.exports = {
     contentBase: './build',
     compress: true
   },
-  devtool: 'cheap-module-eval-source-map', // 不产生.map文件，不会提示列，只有行
-  watch: false,
-  watchOptions: {
-    poll: 1000, // 以毫秒为单位进行轮询(每秒检查一次变动)
-    aggregateTimeout: 600,
-    ignored: [/node_modules/, 'build'] // 忽略的文件夹
+  resolve: {
+    alias: { 
+      '~': path('src'),
+      '~m': path('src/module')
+    },
+    enforceExtension: false, 
+    extensions: ['.wasm', '.mjs', '.js', '.json', 'css', 'html'], 
+    mainFiles: ['index', 'main'] 
   },
+  devtool: 'cheap-module-eval-source-map',
   module: {
     rules: [
       {
         test: /\.css$/,
-        loader: 'happypack/loader?id=css'
+        loader: ['style-loader', 'css-loader']
       },
       {
-        test: /\.(js|jsx)$/,
-        use: 'happypack/loader?id=js', // 若不配置id 默认id从1递增
-        include: path.resolve( __dirname,'src'),
-        exclude: /node_modules/
-      },
-    ],
-  },
-  plugins: [
-    new Happypack({
-      id: 'js',
-      threads: 1, // 默认线程3
-      use: [
-        { 
-          loader: 'babel-loader',// 处理高版本语法转低版本语法
+        test: /\.js$/,
+        use: { 
+          loader: 'babel-loader',
           options: {
             presets: [
-              '@babel/preset-env',
-              '@babel/preset-react'
+              '@babel/preset-env'
             ],
             plugins: [
               ["@babel/plugin-proposal-decorators", { "legacy": true }],
@@ -59,19 +70,24 @@ module.exports = {
             ]
           }
         },
-      ]
-    }),
-    new Happypack({
-      id: 'css',
-      threads: 1,
-      loaders: ['style-loader', 'css-loader']
+        include: path('src'), 
+        exclude: /node_modules/ 
+      },
+    ],
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/index.html',
+      filename: 'home.html',
+      chunks: ['home', 'myPublicCommon', 'vendor'] // 引入公共模块
     }),
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      filename: 'index.html',
+      filename: 'about.html',
+      chunks: ['about', 'myPublicCommon', 'vendor'] 
     }),
-    new CleanWebpackPlugin({
-      verbose: true
+    new CleanWebpackPlugin({ 
+      verbose: true, 
     }),
     new Webpack.BannerPlugin({
       banner: '©Luckyoung',

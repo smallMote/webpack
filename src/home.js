@@ -1,3 +1,4 @@
+import $ from 'jquery'
 import Tmjs1 from '~/module/test.module'
 import Tmjs2 from '~m/test.module'
 import '~m' // main.js
@@ -13,7 +14,11 @@ function getCertList(path) {
   }
   xhr.send()
 }
-getCertList('/api/list')
-getCertList('/auth/list')
+// getCertList('/api/list')
+// getCertList('/auth/list')
 
-console.log(DEV, process.env.NODE_ENV)
+// console.log(DEV, process.env.NODE_ENV)
+
+require('./module/m1')
+require('./module/m2')
+console.log($)

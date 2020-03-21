@@ -1,0 +1,1 @@
+console.log('我是模块', module.id)

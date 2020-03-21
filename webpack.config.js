@@ -12,12 +12,13 @@ module.exports = {
     filename: 'script/[name].[hash:6].js'
   },
   devServer: {
-    port: 3000,
-    progress: true,
-    open: false,
-    contentBase: './build',
-    compress: true
+    hot: true, // 开启热更新
+    index: 'index.html',
+    // hotOnly: true, // 开启热更新,并关闭自动刷新
+    port: 8080,
+    contentBase: './build'
   },
+  devtool: 'eval-source-map',
   resolve: {
     alias: { 
       '~': path('src'),
@@ -27,7 +28,6 @@ module.exports = {
     extensions: ['.wasm', '.mjs', '.js', '.json', 'css', 'html'], 
     mainFiles: ['index', 'main'] 
   },
-  devtool: 'cheap-module-eval-source-map',
   module: {
     rules: [
       {
@@ -40,8 +40,7 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: [
-              '@babel/preset-env',
-              '@babel/preset-react'
+              '@babel/preset-env'
             ],
             plugins: [
               ["@babel/plugin-proposal-decorators", { "legacy": true }],
@@ -67,6 +66,7 @@ module.exports = {
     new Webpack.BannerPlugin({
       banner: '©Luckyoung',
       include: /script/,
-    })
+    }),
+    new Webpack.HotModuleReplacementPlugin() // 启用热更新插件
   ]
 }

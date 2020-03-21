@@ -1,2 +1,1 @@
-export const m = module.id
-export default module.id
+export default 12445678

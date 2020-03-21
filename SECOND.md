@@ -389,3 +389,36 @@ const loadLazyModule = () => {
   })
 }
 ```
+
+### 热更新
+模块热更新，不需要刷新浏览器就可以实时更新修改的模块，减少node的I/O。
+webpack.config.js
+```
+module.export = {
+  devServer: {
+    hot: true, // 开启热更新
+    index: 'index.html',
+    // hotOnly: true, // 开启热更新并关闭自动刷新
+    port: 8080,
+    contentBase: './build'
+  },
+  plugins: [
+    new Webpack.HotModuleReplacementPlugin() // 启用热更新插件
+  ],
+  ...
+}
+```
+模块eg:
+```
+// lazy.js
+export default 12445678
+
+// main.js 入口文件
+import lazy from './module/lazy'
+console.log(lazy)
+if (module.hot) { // 这里判断可以住址浏览器自动刷新
+  module.hot.accept('./module/lazy.js', () => { // 热更新回调
+    console.log('更新')
+  })
+}
+```

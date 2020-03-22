@@ -1,0 +1,1 @@
+module.exports = 'a' + require('./base/b.js')

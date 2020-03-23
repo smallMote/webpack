@@ -1,2 +1,2 @@
 const r = require('./a.js')
-console.log(r)
+console.log('@'+r)

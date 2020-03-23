@@ -1,1 +1,1 @@
-module.exports = 'a' + require('./base/b.js')
+module.exports = 'Luck' + require('./base/b.js')

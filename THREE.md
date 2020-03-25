@@ -1,28 +1,37 @@
-### 手写webpack
+# 手写webpack
+[toc]
+### 构建自定义命令
+  因为这是单独的全局功能模块，源码请移步至  
+  [https://github.com/smallMote/ypack.git](https://github.com/smallMote/ypack.git)
+### 手写loader
+  > 这里以处理less文件实现简易less-loader和style-loader
 
-+ 构建自定义命令
-  - 在```package.json```中添加bin配置配置需要执行的文件。如：我需要配置一个pack命令，并且使用node环境默认运行当前目录下的```pack.js```文件。
-    package.json
-    ```
-    "bin": {
-      "pack": "./pack.js"
-    }
-    ```
-    pack.js
-    ```
-    #! /usr/bin/env node // 指明运行的环境
-    console.log('pack is start!')
-    ```
-  - 链接文件
-    terminal
-    ```
-    // 在pack.js同级目录下
-    sudo npm link // 将package.json配置抛到全局
-    sudo mpm link pack.js // 链接文件
-    ```
-  - 运行文件
-    terminal
-    ```
-    pack // pack is start!
-    npx pack // pack is start!
-    ```
+  style-loader：将css源码插入到head标签中
+  ```
+  function loader(source) {
+    return `
+      let style = document.createElement('style');
+      style.innerHTML = ${JSON.stringify(source)};
+      document.head.appendChild(style);
+    `;
+  }
+  module.exports = loader;
+  ```
+  less-loader：将less语法转换成css语法
+  ```
+  // loader依赖
+  yarn add less -D
+  ```
+  ```
+  const less = require('less');
+  // 将less转换成css
+  function loader(source) {
+    let css = '';
+    less.render(source, (err, c) => {
+      css = c.css;
+    });
+    css = css.replace(/\n/g, '\\n');
+    return css;
+  }
+  module.exports = loader;
+  ```

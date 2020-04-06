@@ -141,3 +141,45 @@
   loader.raw = true; // 转换成2进制流
   module.exports = loader
   ```
+
+### 实现css-loader，改造style-loader
+  主要处理```background: url(../1.png)```这种情况；思想：将代码分割成三段：  
+  第一段：url(../1.png)之前的全部  
+  第二段：url(../1.png)  
+  第三段：url(../1.png)后的全部  
+  然后使用代码片段实现拼接，主要是插入到```webpack```打包后的```eval```函数中让```style-loader```处理。
+  css-loader.js
+  ```
+  function loader(source) { 
+    const reg = /url\((.+?)\)/g; // 匹配url(path)
+    let pos = 0;
+    let current = null; // 当前匹配后返回的内容
+    let codeArr = ['const list = []']; // 代码片段存储
+    while(current = reg.exec(source)) {
+      let [matchUrl, g] = current; // [url('../assets/1.png'), '../assets/1.png']
+      let last = reg.lastIndex - matchUrl.length;
+      codeArr.push(`list.push(${JSON.stringify(source.slice(pos, last))})`); // 第一段
+      pos = reg.lastIndex;
+      codeArr.push(`list.push('url(' + require(${g}) + ')')`); // 第二段（替换成require语法）
+    }
+    codeArr.push(`list.push(${JSON.stringify(source.slice(pos))})`); // 第三段
+    codeArr.push(`module.exports = list.join('')`); // 转换成字符串导出
+    return codeArr.join('\r\n');
+  }
+
+  module.exports = loader
+  ```
+  style-loader.js
+  使用pitch直接拿到资源去处理，然后返回给css-loader处理，最后拿到css-loader处理后的结果。  
+  流程：style-loader -> less-loader!css-loader -> index.less
+  ```
+  // 新增pitch
+  
+  loader.pitch = function pitch(remainingRequest) { // 剩余的请求
+    return `
+    let style = document.createElement('style');
+    style.innerHTML = require(${loaderUtils.stringifyRequest(this, '!!' + remainingRequest)}); // css处理好的路径
+    document.head.appendChild(style);
+  `;
+  }
+  ```

@@ -106,3 +106,38 @@
   }
   module.exports = loader
   ```
+### 实现file-loader
+  实现图片引入路径，可将图片当做模块引入，路径使用hash值代替。
+  file-loader.js
+  ```
+  const loaderUtils = require('loader-utils');
+  function loader(source) {
+    const filename = loaderUtils.interpolateName(this, '[hash].[ext]', { content: source }); // 根据内容产生hash形式的图片路径
+    this.emitFile(filename, source); // 发射文件
+    return `module.exports = '${filename}'`; // 当做模块返回出去
+  }
+  loader.raw = true; // 转换成2进制流
+  module.exports = loader
+  ```
+### 实现url-loader
+  ```file-loader```的扩展，增加将小于一定大小的图片可转换为base64编码，有利于浏览器缓存，减少请求服务器的次数。  
+  依赖：```file-loader```,```mime```: 识别文件类型
+  ```
+  yarn add mime
+  ```
+  url-loader.js
+  ```
+  const loaderUtils = require('loader-utils');
+  const mime = require('mime'); // 识别文件类型
+  function loader(source) {
+    let limit = loaderUtils.getOptions(this).limit;
+    if (limit && limit > source.length) {
+      // this.resourcePath 处理资源路径
+      return `module.exports = "data:${mime.getType(this.resourcePath)};base64,${source.toString('base64')}"`;
+    } else {
+      return require('./file-loader').call(this, source);
+    }
+  }
+  loader.raw = true; // 转换成2进制流
+  module.exports = loader
+  ```

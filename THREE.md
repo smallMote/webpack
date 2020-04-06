@@ -35,3 +35,29 @@
   }
   module.exports = loader;
   ```
+
+### 手写loader（简单实现）
+  在自定义插件中要有一个apply方法，接受一个compiler参数，也就是webpack执行对象，可以获取webpack的生命周期。
+  ```
+  // webpack生命周期
+  this.hooks = { // 钩子函数(生命周期)
+    entryOption: new SyncHook(), // 入口配置钩子
+    compile: new SyncHook(), // 编译钩子
+    afterCompile: new SyncHook(), // 编译完成后钩子
+    afterPlugins: new SyncHook(), // 插件执行后钩子
+    run: new SyncHook(), // 执行打包
+    emit: new SyncHook(), // 文件发生
+    done: new SyncHook() // 结束
+  };
+  ```
+  webpack.config.js
+  ```
+  const EasyPlugins = require('./plugins/easy-plugins')
+  module.exports = {
+    ...
+    plugins: [
+      new EasyPlugins()
+    ],
+    ...
+  }
+  ```

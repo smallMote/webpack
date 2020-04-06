@@ -3,6 +3,7 @@ const Webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const Happypack = require('happypack')
+
 module.exports = {
   mode: 'development', // development || production
   entry: {

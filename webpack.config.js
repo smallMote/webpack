@@ -1,5 +1,5 @@
 const path = require('path')
-
+const EasyPlugins = require('./plugins/easy-plugins')
 module.exports = {
   mode: 'development',
   entry: './src/index.js',
@@ -17,5 +17,8 @@ module.exports = {
         ]
       }
     ]
-  }
+  },
+  plugins: [
+    new EasyPlugins()
+  ]
 }

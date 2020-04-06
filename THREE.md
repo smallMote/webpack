@@ -36,7 +36,7 @@
   module.exports = loader;
   ```
 
-### 手写loader（简单实现）
+### 手写插件（简单实现）
   在自定义插件中要有一个apply方法，接受一个compiler参数，也就是webpack执行对象，可以获取webpack的生命周期。
   ```
   // webpack生命周期

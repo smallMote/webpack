@@ -61,3 +61,48 @@
     ...
   }
   ```
+
+### 手写babel-loader
+  依赖：
+  ```
+  yarn add @babel/core @babel/present-env loader-utils
+  ```
+  webpack.config.js
+  ```
+  module.exports = {
+    ...
+    resolveLoader: { // 解析loader配置,引入loader必须是绝对路径
+      alias: { // 别名
+        'babel-loader': path.resolve(__dirname, 'loader', 'babel-loader.js')
+      }
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'] // presets必须是数组格式
+          }
+        },
+      ]
+    },
+  }
+  ...
+  ```
+  babel-loader.js
+  ```
+  const babel = require('@babel/core');
+  const loaderUtils = require('loader-utils')
+  function loader(source) { // this -> loader处理器上下文对象
+    const optios = loaderUtils.getOptions(this); // 获取loader配置
+    const cb = this.async(); // 异步工具，实现异步返回
+    babel.transform(source, {
+      ...optios,
+      sourceMaps: true, // 源码映射
+    }, function(err, result) {
+      cb(err, result.code, result.map)
+    })
+  }
+  module.exports = loader
+  ```
